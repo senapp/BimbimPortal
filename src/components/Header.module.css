@@ -1,0 +1,109 @@
+.header {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.topRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.brandBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 700;
+    color: rgb(25 30 48);
+}
+
+.subtitle {
+    font-size: 14px;
+    color: rgb(92 101 130);
+}
+
+.dataButtons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dataButton,
+.dataButtonSecondary {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.dataButton {
+    background: rgb(47 94 219);
+    color: white;
+}
+
+.dataButtonSecondary {
+    background: white;
+    color: rgb(42 54 88);
+    border-color: rgb(210 218 236);
+}
+
+.hiddenFileInput {
+    display: none;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tabButton {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 160px;
+    border: 1px solid rgb(215 220 235);
+    border-radius: 10px;
+    background-color: rgb(244 247 255);
+    color: rgb(63 70 96);
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.tabButton:hover {
+    background-color: rgb(233 239 255);
+    border-color: rgb(164 179 235);
+}
+
+.activeTab {
+    color: white;
+    background-color: rgb(47 94 219);
+    border-color: rgb(47 94 219);
+}
+
+.tabLabel {
+    font-size: 15px;
+    line-height: 1.1;
+}
+
+.tabDescription {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    opacity: 0.82;
+}

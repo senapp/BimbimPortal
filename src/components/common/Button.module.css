@@ -1,0 +1,25 @@
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+    border-radius: 2px;
+    color: black;
+    background-color: white;
+    min-width: 100px;
+    width: fit-content;
+    padding: 4px 5px;
+    min-height: 40px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.small-button {
+    min-width: 60px;
+    min-height: 20px;
+    font-size: small;
+}
+
+.button:hover {
+    background-color: rgb(233 233 233);
+}

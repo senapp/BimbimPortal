@@ -1,0 +1,610 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 24px;
+    gap: 24px;
+}
+
+.selector {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    background: #f8f8f8;
+    padding: 16px 24px;
+    border-radius: 10px;
+}
+
+.selectorButtons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.selectButton {
+    padding: 12px 20px;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.selectButton:hover {
+    border-color: #4ECDC4;
+    background: #f0fffe;
+}
+
+.selectButton.active {
+    border-color: #4ECDC4;
+    background: #4ECDC4;
+    color: white;
+}
+
+.deleteButton {
+    padding: 8px 12px;
+    background: #ff6b6b;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.deleteButton:hover {
+    background: #ff5252;
+}
+
+.createButton {
+    padding: 12px 24px;
+    background: #45B7D1;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(69, 183, 209, 0.2);
+}
+
+.createButton:hover {
+    background: #3b9fb8;
+    box-shadow: 0 4px 12px rgba(69, 183, 209, 0.3);
+}
+
+.primaryButton {
+    padding: 12px 20px;
+    background: #4ECDC4;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.primaryButton:hover {
+    background: #45b8c0;
+}
+
+.secondaryButton {
+    padding: 12px 20px;
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    color: #333;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.secondaryButton:hover {
+    background: #e8e8e8;
+    border-color: #999;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #4ECDC4;
+}
+
+.modalButtons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.modalButtons button {
+    flex: 1;
+    max-width: 150px;
+    min-width: 100px;
+}
+
+.viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 48px;
+    border: 1px solid #e7ebf0;
+    box-shadow: 0 20px 50px rgba(21, 32, 56, 0.14);
+    overflow: hidden;
+}
+
+.viewerHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 3px solid #f0f0f0;
+    gap: 32px;
+}
+
+.viewerTitle {
+    font-size: 48px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    letter-spacing: -1px;
+    flex: 1;
+}
+
+.addEventButton {
+    padding: 14px 32px;
+    background: #4ECDC4;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(78, 205, 196, 0.2);
+    white-space: nowrap;
+}
+
+.addEventButton:hover {
+    background: #45b8c0;
+    box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+    transform: translateY(-2px);
+}
+
+.timelineContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-right: 16px;
+    padding-left: 8px;
+}
+
+.timelineCanvas {
+    position: relative;
+    min-height: 280px;
+    background: linear-gradient(180deg, #fafbfe 0%, #f6f8fc 100%);
+    border: 1px solid #e5eaf3;
+    border-radius: 14px;
+    padding: 24px 34px;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-behavior: smooth;
+}
+
+.timelineCanvas::-webkit-scrollbar {
+    height: 8px;
+}
+
+.timelineCanvas::-webkit-scrollbar-track {
+    background: #f0f2f7;
+    border-radius: 10px;
+}
+
+.timelineCanvas::-webkit-scrollbar-thumb {
+    background: #c9d2e5;
+    border-radius: 10px;
+    border: 2px solid #f0f2f7;
+}
+
+.timelineCanvas::-webkit-scrollbar-thumb:hover {
+    background: #4ECDC4;
+}
+
+.timelineBaseLine {
+    position: absolute;
+    left: 34px;
+    right: 34px;
+    top: 50%;
+    height: 3px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: linear-gradient(90deg, #d4dbea 0%, #c9d2e5 100%);
+    z-index: 0;
+}
+
+.periodEvent {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 1px;
+    z-index: 2;
+}
+
+.periodEventLabel {
+    position: absolute;
+    top: 19px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--event-color, #4ECDC4);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    z-index: 5;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.periodEventTitle {
+    position: absolute;
+    top: -70px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 100px;
+    width: max-content;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #d7deeb;
+    color: #22314a;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    text-align: center;
+    letter-spacing: 0.1px;
+    z-index: 6;
+}
+
+.periodEdgeDate {
+    position: absolute;
+    top: 22px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #d7deeb;
+    color: #3a4963;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    z-index: 4;
+}
+
+.periodEdgeDateStart {
+    left: -18px;
+}
+
+.periodEdgeDateEnd {
+    right: -18px;
+}
+
+.periodMarker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--event-color, #4ECDC4);
+    border: 5px solid white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 4;
+}
+
+.periodMarker:hover {
+    transform: translateY(-50%) scale(1.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.periodConnector {
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    height: 4px;
+    background: var(--event-color, #4ECDC4);
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    z-index: 3;
+}
+
+.pointEvent {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: slideInPoint 0.3s ease;
+    z-index: 6;
+    width: max-content;
+    height: 0;
+}
+
+@keyframes slideInPoint {
+    from {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 10px));
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.pointDate {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 22px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #d7deeb;
+    color: #3a4963;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    z-index: 4;
+}
+
+.pointMarker {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--event-color, #4ECDC4);
+    border: 4px solid white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    z-index: 7;
+    position: relative;
+    place-self: center;
+    transform: translateY(-50%);
+}
+
+.pointMarker:hover {
+    transform: translateY(-50%) scale(1.35);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.pointFlow {
+    position: absolute;
+    top: 50%;
+    height: 2px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, var(--event-color, #4ECDC4) 0%, var(--event-color-fade, rgba(78, 205, 196, 0.2)) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.pointArrow {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid var(--event-color, #4ECDC4);
+    z-index: 2;
+    opacity: 0.85;
+}
+
+.pointLabel {
+    position: absolute;
+    top: -40px;
+    border: 1px solid #d7deeb;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #24324a;
+    width: max-content;
+    min-width: 120px;
+    max-width: 220px;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 0;
+    padding: 2px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 10px;
+    z-index: 8;
+}
+
+.emptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #999;
+}
+
+.emptyState p {
+    font-size: 16px;
+    margin: 0;
+}
+
+.eventActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.eventEditButton {
+    padding: 6px 10px;
+    background: #45B7D1;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.2s ease;
+}
+
+.eventEditButton:hover {
+    background: #3b9fb8;
+}
+
+.eventDeleteButton {
+    padding: 6px 10px;
+    background: #ff6b6b;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.2s ease;
+}
+
+.eventDeleteButton:hover {
+    background: #ff5252;
+}
+
+.eventPopover {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.eventPopoverArrow {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid white;
+}
+
+.timelineScale {
+    height: 30px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+}
+
+.scaleTick {
+    position: absolute;
+    width: 1px;
+    height: 6px;
+    background: #ccc;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.scaleLabel {
+    position: absolute;
+    font-size: 10px;
+    color: #999;
+    transform: translateX(-50%);
+    top: 100%;
+    margin-top: 2px;
+}

@@ -1,0 +1,23 @@
+{
+    "extends": "stylelint-config-standard",
+    "rules": {
+        "color-hex-length": null,
+        "custom-property-empty-line-before": null,
+        "declaration-empty-line-before": null,
+        "indentation": 4,
+        "property-no-unknown": [
+            true,
+            {
+                "ignoreProperties": [
+                    "composes"
+                ]
+            }
+        ],
+        "rule-empty-line-before": [
+            "always",
+            {
+                "ignore": "inside-block"
+            }
+        ]
+    }
+}

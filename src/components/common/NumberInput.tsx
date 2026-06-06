@@ -12,7 +12,7 @@ type Props = {
     onChange?: (value: number) => void;
 }
 
-export const NumberInput: React.FC<Props> = ({ label, containerClassName = '', min, max, value, step = 1, onChange  }) => {
+export const NumberInput: React.FC<Props> = ({ label, containerClassName = '', min, max, value, step = 0, onChange  }) => {
     const [currentInput, setCurrentInput] = useState<string>(value?.toString() ?? '');
 
     useEffect(() => {

@@ -24,11 +24,11 @@ const createEmptyForm = (): EventFormState => ({
     title: '',
     description: '',
     category: 'milestone',
-    color: EVENT_COLORS[0],
+    color: '',
     eventType: 'point',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
+    date: '',
+    startDate: '',
+    endDate: '',
 });
 
 const createId = (): string => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;

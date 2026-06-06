@@ -13,26 +13,7 @@ type TodoFormState = {
 };
 
 const DEFAULT_TODO_STATE: TodoPageState = {
-    items: [
-        {
-            id: 'todo-1',
-            title: 'Prepare client update',
-            description: 'Collect notes, summarize blockers, and send an update.',
-            dueDate: format(new Date(), 'yyyy-MM-dd'),
-            status: 'in-progress',
-            priority: 'high',
-            createdAt: new Date().toISOString(),
-        },
-        {
-            id: 'todo-2',
-            title: 'Refine travel budget',
-            description: 'Review expected money flow and flag anything unexpected.',
-            dueDate: format(new Date(Date.now() + 86400000 * 4), 'yyyy-MM-dd'),
-            status: 'todo',
-            priority: 'medium',
-            createdAt: new Date().toISOString(),
-        },
-    ],
+    items: [],
     filterStatus: 'all',
     filterQuery: '',
     sortBy: 'created',

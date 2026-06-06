@@ -187,60 +187,14 @@ const normalizeContact = (contact?: Partial<Contact>): Contact => {
         occupation: contact?.occupation ?? '',
         linkedInUrl: contact?.linkedInUrl ?? '',
         instagramUrl: instaUrl,
-        latitude: contact?.latitude ?? 59.3293,
-        longitude: contact?.longitude ?? 18.0686,
+        latitude: contact?.latitude ?? 0,
+        longitude: contact?.longitude ?? 0,
         city: contact?.city ?? '',
         notes: contact?.notes ?? '',
     };
 };
 
-const DEFAULT_CONTACTS: Contact[] = [
-    {
-        id: 'contact-maria',
-        name: 'Maria Andersson',
-        nationalityCode: 'SE',
-        avatarUrl: createAvatarDataUrl('Maria Andersson', '#3b82f6'),
-        useInstagramAvatar: false,
-        dateOfBirth: '1994-04-18',
-        occupation: 'Product Designer',
-        linkedInUrl: 'https://www.linkedin.com/',
-        instagramUrl: '',
-        latitude: 59.3293,
-        longitude: 18.0686,
-        city: 'Stockholm',
-        notes: 'Design partner and long-term friend.',
-    },
-    {
-        id: 'contact-ryo',
-        name: 'Ryo Tanaka',
-        nationalityCode: 'JP',
-        avatarUrl: createAvatarDataUrl('Ryo Tanaka', '#ef4444'),
-        useInstagramAvatar: false,
-        dateOfBirth: '1992-09-07',
-        occupation: 'Software Architect',
-        linkedInUrl: 'https://www.linkedin.com/',
-        instagramUrl: '',
-        latitude: 35.6762,
-        longitude: 139.6503,
-        city: 'Tokyo',
-        notes: 'Met during a software conference.',
-    },
-    {
-        id: 'contact-ava',
-        name: 'Ava Miller',
-        nationalityCode: 'US',
-        avatarUrl: createAvatarDataUrl('Ava Miller', '#10b981'),
-        useInstagramAvatar: false,
-        dateOfBirth: '1990-11-22',
-        occupation: 'Operations Manager',
-        linkedInUrl: 'https://www.linkedin.com/',
-        instagramUrl: '',
-        latitude: 40.7128,
-        longitude: -74.006,
-        city: 'New York',
-        notes: 'Travel contact and product collaborator.',
-    },
-];
+const DEFAULT_CONTACTS: Contact[] = [];
 
 const DEFAULT_STATE: ContactsState = {
     contacts: DEFAULT_CONTACTS,
@@ -252,7 +206,7 @@ const normalizeContactsState = (state?: Partial<ContactsState>): ContactsState =
     filter: state?.filter ?? '',
 });
 
-const DEFAULT_CENTER: [number, number] = [20, 0];
+const DEFAULT_CENTER: [number, number] = [0, 0];
 const LeafletTileLayer = TileLayer as React.ComponentType<any>;
 const LeafletMarker = Marker as React.ComponentType<any>;
 const LeafletPopup = Popup as React.ComponentType<any>;

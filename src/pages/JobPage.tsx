@@ -1,7 +1,16 @@
 import * as React from 'react';
 import { addMonths, endOfMonth, format, isSameDay, isSameMonth, parseISO, startOfDay, startOfMonth, subMonths } from 'date-fns';
-import { getHolidayInfoForDate, getMonthGridDays, isWorkingDay } from '../utils/jobCalendar';
-import { CurrencyCode, JobCalendarState, JobHolidayCountry } from '../utils/portalTypes';
+import {
+    getDayShiftInfoForDate,
+    getClampedSevenDayWindowStartIndex,
+    getHolidayInfoForDate,
+    getMonthGridDays,
+    getMonthShiftCompliance,
+    getSevenDayWindowSummary,
+    getWorkingHoursForDate,
+    isWorkingDay,
+} from '../utils/jobCalendar';
+import { CurrencyCode, JobCalendarState, JobDayShiftOverride, JobHolidayCountry, JobShiftPreset } from '../utils/portalTypes';
 import { usePersistedState } from '../utils/storage';
 import css from './JobPage.module.css';
 
@@ -9,12 +18,14 @@ const STORAGE_DEFAULT: JobCalendarState = {
     visibleMonthIso: format(startOfMonth(new Date()), 'yyyy-MM-01'),
     selectedDayIso: null,
     holidayCountry: 'SE',
-    wagePerHourSek: 175,
-    workingHoursPerDay: 8,
+    wagePerHourSek: 0,
+    workingHoursPerDay: 0,
     monthlySalarySek: 0,
     monthlyBonusSek: 0,
     bonusMonthOverrides: {},
+    dayShiftOverrides: {},
     workingDayOverrides: {},
+    shiftPreset: null,
 };
 
 const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -62,6 +73,29 @@ const normalizeCalendarState = (state: Partial<JobCalendarState>): JobCalendarSt
         }
         return acc;
     }, {}),
+    dayShiftOverrides: {
+        ...Object.entries(state.workingDayOverrides ?? {}).reduce<Record<string, JobDayShiftOverride>>((acc, [dateIso, value]) => {
+            const date = parseISO(dateIso);
+            if (date >= WORK_DATA_START_DATE) {
+                acc[dateIso] = {
+                    working: value,
+                    hours: value ? (state.workingHoursPerDay ?? STORAGE_DEFAULT.workingHoursPerDay) : 0,
+                };
+            }
+            return acc;
+        }, {}),
+        ...Object.entries(state.dayShiftOverrides ?? {}).reduce<Record<string, JobDayShiftOverride>>((acc, [dateIso, value]) => {
+            const date = parseISO(dateIso);
+            if (date >= WORK_DATA_START_DATE) {
+                acc[dateIso] = {
+                    title: value.title ?? '',
+                    hours: Number.isFinite(value.hours ?? NaN) ? Math.max(value.hours ?? 0, 0) : STORAGE_DEFAULT.workingHoursPerDay,
+                    working: value.working ?? true,
+                };
+            }
+            return acc;
+        }, {}),
+    },
     workingDayOverrides: Object.entries(state.workingDayOverrides ?? {}).reduce<Record<string, boolean>>((acc, [dateIso, value]) => {
         const date = parseISO(dateIso);
         if (date >= WORK_DATA_START_DATE) {
@@ -69,6 +103,9 @@ const normalizeCalendarState = (state: Partial<JobCalendarState>): JobCalendarSt
         }
         return acc;
     }, {}),
+    shiftPreset: state.shiftPreset && typeof state.shiftPreset.title === 'string' && Number.isFinite(state.shiftPreset.hours)
+        ? { title: state.shiftPreset.title, hours: Math.max(state.shiftPreset.hours, 0) }
+        : null,
 });
 
 export const JobPage: React.FC = () => {
@@ -76,7 +113,12 @@ export const JobPage: React.FC = () => {
     const [displayCurrency, setDisplayCurrency] = usePersistedState<CurrencyCode>('job-display-currency', 'SEK');
     const [jpyPerSekRate, setJpyPerSekRate] = usePersistedState<number>('global-jpy-per-sek-rate', 14.8);
     const [showAdvanced, setShowAdvanced] = React.useState(false);
+    const [selectedWindowIndex, setSelectedWindowIndex] = React.useState(0);
+    const [isWindowDragging, setIsWindowDragging] = React.useState(false);
     const calendarState = React.useMemo(() => normalizeCalendarState(storedCalendarState), [storedCalendarState]);
+    const selectedWindowIndexRef = React.useRef(0);
+    const windowDragStateRef = React.useRef<{ pointerId: number; offsetFromStart: number; hasMoved: boolean } | null>(null);
+    const suppressWindowClickRef = React.useRef(false);
 
     const visibleMonth = React.useMemo(() => parseISO(calendarState.visibleMonthIso), [calendarState.visibleMonthIso]);
     const visibleMonthKey = React.useMemo(() => format(startOfMonth(visibleMonth), 'yyyy-MM-01'), [visibleMonth]);
@@ -89,21 +131,33 @@ export const JobPage: React.FC = () => {
     const visibleMonthHasData = React.useMemo(() => endOfMonth(visibleMonth) >= WORK_DATA_START_DATE, [visibleMonth]);
     const isFullTimeEmploymentMonth = React.useMemo(() => visibleMonthStart >= FULL_TIME_EMPLOYMENT_START_DATE, [visibleMonthStart]);
     const isBonusMonth = isFullTimeEmploymentMonth ? (calendarState.bonusMonthOverrides[visibleMonthKey] ?? false) : false;
+    const visibleMonthCompliance = React.useMemo(() => getMonthShiftCompliance(visibleMonth, calendarState), [calendarState, visibleMonth]);
 
     const monthDays = React.useMemo(() => days.filter((day) => isSameMonth(day, visibleMonth)), [days, visibleMonth]);
     const monthDaysWithData = React.useMemo(() => monthDays.filter((day) => day >= WORK_DATA_START_DATE), [monthDays]);
 
     const selectedDayHasData = selectedDay ? selectedDay >= WORK_DATA_START_DATE : false;
-    const selectedHoliday = selectedDay && selectedDayHasData ? getHolidayInfoForDate(selectedDay, calendarState.holidayCountry) : null;
+    const selectedDayShift = selectedDay && selectedDayHasData ? getDayShiftInfoForDate(selectedDay, calendarState) : null;
+    const selectedHoliday = selectedDayShift?.holidayInfo ?? null;
+    const selectedDayStatus = selectedDay && selectedDayHasData ? isWorkingDay(selectedDay, calendarState) : null;
+    const selectedDayWorkingHours = selectedDayShift?.hours ?? 0;
+
+    React.useEffect(() => {
+        setSelectedWindowIndex((current) => getClampedSevenDayWindowStartIndex(current, days.length));
+    }, [days.length]);
+
+    React.useEffect(() => {
+        selectedWindowIndexRef.current = selectedWindowIndex;
+    }, [selectedWindowIndex]);
 
     const currentMonthSummary = React.useMemo(() => {
         const totalWorkingDays = monthDaysWithData.filter((day) => isWorkingDay(day, calendarState)).length;
         const earnedWorkingDays = monthDaysWithData.filter((day) => day <= today && isWorkingDay(day, calendarState)).length;
         const remainingWorkingDays = monthDaysWithData.filter((day) => day > today && isWorkingDay(day, calendarState)).length;
 
-        const totalWorkingHours = totalWorkingDays * calendarState.workingHoursPerDay;
-        const earnedWorkingHours = earnedWorkingDays * calendarState.workingHoursPerDay;
-        const remainingWorkingHours = remainingWorkingDays * calendarState.workingHoursPerDay;
+        const totalWorkingHours = monthDaysWithData.reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
+        const earnedWorkingHours = monthDaysWithData.filter((day) => day <= today).reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
+        const remainingWorkingHours = monthDaysWithData.filter((day) => day > today).reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
 
         const totalSalarySek = totalWorkingHours * calendarState.wagePerHourSek;
         const earnedSalarySek = earnedWorkingHours * calendarState.wagePerHourSek;
@@ -150,63 +204,14 @@ export const JobPage: React.FC = () => {
         }));
     };
 
-    const setSelectedDayWorkingState = (working: boolean): void => {
-        if (!selectedDay || selectedDay < WORK_DATA_START_DATE) {
-            return;
-        }
-
-        const selectedDayIso = toIsoDate(selectedDay);
-
-        updateCalendarState((previous) => ({
-            ...previous,
-            workingDayOverrides: {
-                ...previous.workingDayOverrides,
-                [selectedDayIso]: working,
-            },
-        }));
-    };
-
-    const setVisibleMonthWorkingState = (working: boolean): void => {
-        const monthDays = days.filter((day) => isSameMonth(day, visibleMonth));
-
-        updateCalendarState((previous) => {
-            const nextOverrides = { ...previous.workingDayOverrides };
-
-            monthDays.forEach((day) => {
-                const dayIso = toIsoDate(day);
-
-                if (day < WORK_DATA_START_DATE) {
-                    delete nextOverrides[dayIso];
-                    return;
-                }
-
-                if (!working) {
-                    nextOverrides[dayIso] = false;
-                    return;
-                }
-
-                const holidayInfo = getHolidayInfoForDate(day, previous.holidayCountry);
-                const suitableForWork = day.getDay() !== 0 && day.getDay() !== 6 && !holidayInfo;
-                nextOverrides[dayIso] = suitableForWork;
-            });
-
-            return {
-                ...previous,
-                workingDayOverrides: nextOverrides,
-            };
-        });
-    };
-
-    const selectedDayStatus = selectedDay && selectedDayHasData ? isWorkingDay(selectedDay, calendarState) : null;
-
     const hourlyMonthSummary = React.useMemo(() => {
         const totalWorkingDays = monthDaysWithData.filter((day) => isWorkingDay(day, calendarState)).length;
         const earnedWorkingDays = monthDaysWithData.filter((day) => day <= today && isWorkingDay(day, calendarState)).length;
         const remainingWorkingDays = monthDaysWithData.filter((day) => day > today && isWorkingDay(day, calendarState)).length;
 
-        const totalWorkingHours = totalWorkingDays * calendarState.workingHoursPerDay;
-        const earnedWorkingHours = earnedWorkingDays * calendarState.workingHoursPerDay;
-        const remainingWorkingHours = remainingWorkingDays * calendarState.workingHoursPerDay;
+        const totalWorkingHours = monthDaysWithData.reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
+        const earnedWorkingHours = monthDaysWithData.filter((day) => day <= today).reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
+        const remainingWorkingHours = monthDaysWithData.filter((day) => day > today).reduce((sum, day) => sum + getWorkingHoursForDate(day, calendarState), 0);
 
         const expectedSalarySek = totalWorkingHours * calendarState.wagePerHourSek;
         const earnedSalarySek = earnedWorkingHours * calendarState.wagePerHourSek;
@@ -224,6 +229,95 @@ export const JobPage: React.FC = () => {
             remainingSalarySek,
         };
     }, [calendarState, monthDaysWithData, today]);
+
+    const selectedWindowStartIndex = React.useMemo(
+        () => getClampedSevenDayWindowStartIndex(selectedWindowIndex, days.length),
+        [days.length, selectedWindowIndex],
+    );
+    const selectedWindowStart = React.useMemo(
+        () => days[selectedWindowStartIndex] ?? days[0],
+        [days, selectedWindowStartIndex],
+    );
+    const selectedWindowSummary = React.useMemo(
+        () => (selectedWindowStart ? getSevenDayWindowSummary(selectedWindowStart, calendarState) : null),
+        [calendarState, selectedWindowStart],
+    );
+    const selectedWindowDaySet = React.useMemo(() => new Set(selectedWindowSummary?.days.map((dayInfo) => dayInfo.dateIso) ?? []), [selectedWindowSummary]);
+
+    const getDayIndexFromPointer = React.useCallback((clientX: number, clientY: number): number | null => {
+        if (typeof document === 'undefined') {
+            return null;
+        }
+
+        const hoveredElement = document.elementFromPoint(clientX, clientY);
+        const dayCell = hoveredElement instanceof HTMLElement ? hoveredElement.closest('[data-day-index]') : null;
+
+        if (!(dayCell instanceof HTMLElement)) {
+            return null;
+        }
+
+        const dayIndex = Number(dayCell.dataset.dayIndex);
+        return Number.isFinite(dayIndex) ? dayIndex : null;
+    }, []);
+
+    const beginWindowDrag = (pointerId: number, dayIndex: number): void => {
+        windowDragStateRef.current = {
+            pointerId,
+            offsetFromStart: 0,
+            hasMoved: false,
+        };
+        setSelectedWindowIndex(dayIndex);
+        suppressWindowClickRef.current = false;
+        setIsWindowDragging(true);
+    };
+
+    const updateWindowDrag = (pointerId: number, clientX: number, clientY: number): void => {
+        const dragState = windowDragStateRef.current;
+
+        if (!dragState || dragState.pointerId !== pointerId) {
+            return;
+        }
+
+        const hoveredIndex = getDayIndexFromPointer(clientX, clientY);
+
+        if (hoveredIndex === null) {
+            return;
+        }
+
+        const nextIndex = getClampedSevenDayWindowStartIndex(hoveredIndex - dragState.offsetFromStart, days.length);
+
+        if (nextIndex !== selectedWindowIndexRef.current) {
+            suppressWindowClickRef.current = true;
+            dragState.hasMoved = true;
+            selectedWindowIndexRef.current = nextIndex;
+            setSelectedWindowIndex(nextIndex);
+        }
+    };
+
+    const endWindowDrag = (pointerId: number, currentTarget: EventTarget & HTMLButtonElement): void => {
+        const dragState = windowDragStateRef.current;
+        const shouldSuppressClick = dragState?.hasMoved ?? false;
+
+        if (dragState && dragState.pointerId === pointerId) {
+            windowDragStateRef.current = null;
+        }
+
+        suppressWindowClickRef.current = shouldSuppressClick;
+        setIsWindowDragging(false);
+
+        if (currentTarget.hasPointerCapture(pointerId)) {
+            currentTarget.releasePointerCapture(pointerId);
+        }
+    };
+
+    const handleCalendarDayClick = (dayIso: string): void => {
+        if (suppressWindowClickRef.current) {
+            suppressWindowClickRef.current = false;
+            return;
+        }
+
+        setSelectedDay(dayIso);
+    };
 
     const fullTimeMonthSummary = React.useMemo(() => {
         if (!isFullTimeEmploymentMonth) {
@@ -256,6 +350,146 @@ export const JobPage: React.FC = () => {
             },
         }));
     };
+
+    const updateDayShift = (day: Date, patch: Partial<JobDayShiftOverride>): void => {
+        if (day < WORK_DATA_START_DATE) {
+            return;
+        }
+
+        const dayIso = toIsoDate(day);
+
+        updateCalendarState((previous) => {
+            const current = previous.dayShiftOverrides[dayIso] ?? {};
+            const nextOverride: JobDayShiftOverride = {
+                ...current,
+                ...patch,
+            };
+
+            return {
+                ...previous,
+                dayShiftOverrides: {
+                    ...previous.dayShiftOverrides,
+                    [dayIso]: nextOverride,
+                },
+                workingDayOverrides: {
+                    ...previous.workingDayOverrides,
+                    [dayIso]: nextOverride.working ?? ((nextOverride.hours ?? 0) > 0),
+                },
+            };
+        });
+    };
+
+    const setSelectedDayWorkingState = (working: boolean): void => {
+        if (!selectedDay || !selectedDayHasData) {
+            return;
+        }
+
+        updateDayShift(selectedDay, {
+            working,
+            hours: working ? Math.max(selectedDayWorkingHours || calendarState.workingHoursPerDay, 0) : 0,
+        });
+    };
+
+    const setVisibleMonthWorkingState = (working: boolean): void => {
+        const monthDaysForUpdate = days.filter((day) => isSameMonth(day, visibleMonth));
+
+        updateCalendarState((previous) => {
+            const nextDayShiftOverrides = { ...previous.dayShiftOverrides };
+            const nextWorkingDayOverrides = { ...previous.workingDayOverrides };
+            const template = previous.shiftPreset ?? { title: '', hours: previous.workingHoursPerDay };
+
+            monthDaysForUpdate.forEach((day) => {
+                const dayIso = toIsoDate(day);
+
+                if (day < WORK_DATA_START_DATE) {
+                    delete nextDayShiftOverrides[dayIso];
+                    delete nextWorkingDayOverrides[dayIso];
+                    return;
+                }
+
+                if (!working) {
+                    nextDayShiftOverrides[dayIso] = {
+                        ...(nextDayShiftOverrides[dayIso] ?? {}),
+                        hours: 0,
+                        working: false,
+                    };
+                    nextWorkingDayOverrides[dayIso] = false;
+                    return;
+                }
+
+                const holidayInfo = getHolidayInfoForDate(day, previous.holidayCountry);
+                const suitableForWork = day.getDay() !== 0 && day.getDay() !== 6 && !holidayInfo;
+
+                nextDayShiftOverrides[dayIso] = {
+                    title: template.title,
+                    hours: template.hours,
+                    working: suitableForWork,
+                };
+                nextWorkingDayOverrides[dayIso] = suitableForWork;
+            });
+
+            return {
+                ...previous,
+                dayShiftOverrides: nextDayShiftOverrides,
+                workingDayOverrides: nextWorkingDayOverrides,
+            };
+        });
+    };
+
+    const updateShiftPreset = (patch: Partial<JobShiftPreset>): void => {
+        updateCalendarState((previous) => ({
+            ...previous,
+            shiftPreset: {
+                title: previous.shiftPreset?.title ?? '',
+                hours: previous.shiftPreset?.hours ?? previous.workingHoursPerDay,
+                ...patch,
+            },
+        }));
+    };
+
+    const applyPresetToSelectedDay = (): void => {
+        if (!selectedDay || !selectedDayHasData || !calendarState.shiftPreset) {
+            return;
+        }
+
+        updateDayShift(selectedDay, {
+            title: calendarState.shiftPreset.title,
+            hours: calendarState.shiftPreset.hours,
+            working: true,
+        });
+    };
+
+    const applyPresetToSelectedWindow = (): void => {
+        if (!selectedWindowSummary || !calendarState.shiftPreset) {
+            return;
+        }
+
+        updateCalendarState((previous) => {
+            const nextDayShiftOverrides = { ...previous.dayShiftOverrides };
+            const nextWorkingDayOverrides = { ...previous.workingDayOverrides };
+
+            selectedWindowSummary.days.forEach((dayInfo) => {
+                const day = parseISO(dayInfo.dateIso);
+                if (day < WORK_DATA_START_DATE) {
+                    return;
+                }
+
+                nextDayShiftOverrides[dayInfo.dateIso] = {
+                    title: previous.shiftPreset?.title ?? '',
+                    hours: previous.shiftPreset?.hours ?? previous.workingHoursPerDay,
+                    working: true,
+                };
+                nextWorkingDayOverrides[dayInfo.dateIso] = true;
+            });
+
+            return {
+                ...previous,
+                dayShiftOverrides: nextDayShiftOverrides,
+                workingDayOverrides: nextWorkingDayOverrides,
+            };
+        });
+    };
+
     const hourlyWageDisplay = fromSekAmount(calendarState.wagePerHourSek, displayCurrency, jpyPerSekRate);
     const monthlySalaryDisplay = fromSekAmount(calendarState.monthlySalarySek, displayCurrency, jpyPerSekRate);
     const monthlyBonusDisplay = fromSekAmount(calendarState.monthlyBonusSek, displayCurrency, jpyPerSekRate);
@@ -399,7 +633,7 @@ export const JobPage: React.FC = () => {
                                     selectedDayHasData ? (
                                         <>
                                             {selectedHoliday ? `${selectedHoliday.name} • ` : ''}
-                                            {selectedDayStatus ? 'Working day' : 'Non-working day'}
+                                            {selectedDayStatus ? 'Working day' : 'Non-working day'} • {selectedDayWorkingHours.toFixed(2)} h
                                         </>
                                     ) : (
                                         'No work data before April 2026'
@@ -408,6 +642,44 @@ export const JobPage: React.FC = () => {
                                     'Click a day to inspect or update it'
                                 )}
                             </div>
+
+                            <label className={css.shiftField}>
+                                <span>Day title</span>
+                                <input
+                                    type="text"
+                                    value={selectedDayShift?.title ?? ''}
+                                    disabled={!selectedDay || !selectedDayHasData}
+                                    onChange={(event) => {
+                                        if (!selectedDay || !selectedDayHasData) {
+                                            return;
+                                        }
+
+                                        updateDayShift(selectedDay, { title: event.target.value });
+                                    }}
+                                />
+                            </label>
+
+                            <label className={css.shiftField}>
+                                <span>Day hours</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.25"
+                                    value={selectedDayWorkingHours}
+                                    disabled={!selectedDay || !selectedDayHasData}
+                                    onChange={(event) => {
+                                        if (!selectedDay || !selectedDayHasData) {
+                                            return;
+                                        }
+
+                                        const nextHours = Number(event.target.value);
+                                        updateDayShift(selectedDay, {
+                                            hours: nextHours,
+                                            working: nextHours > 0,
+                                        });
+                                    }}
+                                />
+                            </label>
 
                             <div
                                 className={`${css.dayStateToggle} ${selectedDayStatus === true ? css.dayStateToggleWorking : ''} ${selectedDayStatus === false ? css.dayStateToggleOff : ''}`.trim()}
@@ -431,6 +703,46 @@ export const JobPage: React.FC = () => {
                                     aria-pressed={selectedDayStatus === false}
                                 >
                                     Off
+                                </button>
+                            </div>
+
+                            <div className={css.selectionButtons}>
+                                <button type="button" className={css.primaryButton} onClick={applyPresetToSelectedDay} disabled={!selectedDay || !selectedDayHasData || !calendarState.shiftPreset}>
+                                    Apply preset to day
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={css.selectionCard}>
+                            <div className={css.selectionHeading}>Reusable preset</div>
+                            <div className={css.selectionMeta}>Create one standard title and shift length, then apply it to a selected day or 7-day window.</div>
+
+                            <label className={css.shiftField}>
+                                <span>Preset title</span>
+                                <input
+                                    type="text"
+                                    value={calendarState.shiftPreset?.title ?? ''}
+                                    onChange={(event) => updateShiftPreset({ title: event.target.value })}
+                                />
+                            </label>
+
+                            <label className={css.shiftField}>
+                                <span>Preset hours</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.25"
+                                    value={calendarState.shiftPreset?.hours ?? calendarState.workingHoursPerDay}
+                                    onChange={(event) => updateShiftPreset({ hours: Number(event.target.value) })}
+                                />
+                            </label>
+
+                            <div className={css.selectionButtons}>
+                                <button type="button" className={css.primaryButton} onClick={() => updateShiftPreset({ title: calendarState.shiftPreset?.title ?? '', hours: calendarState.shiftPreset?.hours ?? calendarState.workingHoursPerDay })}>
+                                    Save preset
+                                </button>
+                                <button type="button" className={css.secondaryButton} onClick={applyPresetToSelectedWindow} disabled={!selectedWindowSummary || !calendarState.shiftPreset}>
+                                    Apply to 7-day window
                                 </button>
                             </div>
                         </div>
@@ -501,6 +813,34 @@ export const JobPage: React.FC = () => {
                 </article>
             </div>
 
+            <div className={css.calendarTools}>
+                <div className={css.rangeCard}>
+                    <div className={css.selectionHeading}>7-day window</div>
+                    <div className={css.selectionMeta}>Drag the highlighted block on the calendar to move the selected 7-day period.</div>
+                    <div className={css.rangeSummary}>
+                        <strong>
+                            {selectedWindowSummary
+                                ? `${format(selectedWindowSummary.startDate, 'd MMM yyyy')} to ${format(selectedWindowSummary.endDate, 'd MMM yyyy')}`
+                                : 'No window selected'}
+                        </strong>
+                        <small>
+                            {selectedWindowSummary
+                                ? `${selectedWindowSummary.totalHours.toFixed(2)} total hours in this 7-day period`
+                                : 'The slider is unavailable until a month is loaded'}
+                        </small>
+                    </div>
+                </div>
+
+                <div className={`${css.complianceBanner} ${visibleMonthCompliance.isLegal ? css.complianceBannerLegal : css.complianceBannerIllegal}`.trim()}>
+                    <strong>{visibleMonthCompliance.isLegal ? '✓ Legal Shifts' : 'Illegal Shifts'}</strong>
+                    <span>
+                        {visibleMonthCompliance.isLegal
+                            ? 'Every 7-day window that overlaps this month stays at or below 28 hours.'
+                            : `${visibleMonthCompliance.violatingWindows.length} overlapping 7-day window(s) exceed 28 hours.`}
+                    </span>
+                </div>
+            </div>
+
             <div className={css.calendarCard}>
                 <div className={css.weekRow}>
                     {weekDays.map((day) => (
@@ -509,22 +849,45 @@ export const JobPage: React.FC = () => {
                 </div>
 
                 <div className={css.dayGrid}>
-                    {days.map((day) => {
+                    {days.map((day, index) => {
                         const outsideMonth = !isSameMonth(day, visibleMonth);
                         const dayIso = toIsoDate(day);
                         const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
                         const hasWorkData = day >= WORK_DATA_START_DATE;
-                        const holidayInfo = hasWorkData ? getHolidayInfoForDate(day, calendarState.holidayCountry) : null;
-                        const working = hasWorkData ? isWorkingDay(day, calendarState) : false;
+                        const dayShift = hasWorkData ? getDayShiftInfoForDate(day, calendarState) : null;
+                        const holidayInfo = dayShift?.holidayInfo ?? null;
+                        const working = dayShift?.working ?? false;
                         const dayIsSaturday = day.getDay() === 6;
                         const dayIsSunday = day.getDay() === 0;
+                        const isInSelectedWindow = selectedWindowDaySet.has(dayIso);
 
                         return (
                             <button
                                 key={dayIso}
                                 type="button"
-                                className={`${css.dayCell} ${outsideMonth ? css.outsideMonth : ''} ${isSelected ? css.selectedDay : ''} ${holidayInfo ? css.holidayCell : ''} ${hasWorkData ? (working ? css.dayCellWorking : css.dayCellOff) : css.dayCellNoData} ${dayIsSaturday ? css.saturdayCell : ''} ${dayIsSunday ? css.sundayCell : ''}`.trim()}
-                                onClick={() => setSelectedDay(dayIso)}
+                                data-day-index={index}
+                                className={`${css.dayCell} ${outsideMonth ? css.outsideMonth : ''} ${isSelected ? css.selectedDay : ''} ${isInSelectedWindow ? `${css.windowDay} ${isWindowDragging ? css.windowDayDragging : ''}`.trim() : ''} ${holidayInfo ? css.holidayCell : ''} ${hasWorkData ? (working ? css.dayCellWorking : css.dayCellOff) : css.dayCellNoData} ${dayIsSaturday ? css.saturdayCell : ''} ${dayIsSunday ? css.sundayCell : ''}`.trim()}
+                                onClick={() => {
+                                    setSelectedWindowIndex(index);
+                                    handleCalendarDayClick(dayIso);
+                                }}
+                                onPointerDown={(event) => {
+                                    beginWindowDrag(event.pointerId, index);
+                                    event.currentTarget.setPointerCapture(event.pointerId);
+                                }}
+                                onPointerMove={(event) => {
+                                    if (!isWindowDragging) {
+                                        return;
+                                    }
+
+                                    updateWindowDrag(event.pointerId, event.clientX, event.clientY);
+                                }}
+                                onPointerUp={(event) => {
+                                    endWindowDrag(event.pointerId, event.currentTarget);
+                                }}
+                                onPointerCancel={(event) => {
+                                    endWindowDrag(event.pointerId, event.currentTarget);
+                                }}
                             >
                                 <span className={css.dayTopRow}>
                                     <span className={css.dayNumber}>{format(day, 'd')}</span>
@@ -534,7 +897,10 @@ export const JobPage: React.FC = () => {
                                 {holidayInfo ? (
                                     <span className={css.holidayName}>{holidayInfo.name}</span>
                                 ) : (
-                                    <span className={css.dayNote}>{!hasWorkData ? 'No work data' : dayIsSunday || dayIsSaturday ? 'Weekend' : ' '}</span>
+                                    <>
+                                        <span className={css.dayTitle}>{!hasWorkData ? 'No work data' : dayShift?.title}</span>
+                                        <span className={css.dayNote}>{!hasWorkData ? 'No work data' : `${dayShift?.hours} h`}</span>
+                                    </>
                                 )}
                             </button>
                         );

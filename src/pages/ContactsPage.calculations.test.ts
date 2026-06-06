@@ -66,8 +66,8 @@ describe('ContactsPage calculations', () => {
             occupation: 'Operations Manager',
             linkedInUrl: 'https://linkedin.com',
             instagramUrl: '@avam',
-            latitude: 40.7128,
-            longitude: -74.006,
+            latitude: (Math.random() * 180) - 90,
+            longitude: (Math.random() * 360) - 180,
             city: 'New York',
             notes: 'Travel collaborator',
         };

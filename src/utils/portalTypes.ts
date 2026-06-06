@@ -51,6 +51,19 @@ export type JobHolidayCountry = 'SE' | 'JP';
 
 export type JobWorkingDayOverrides = Record<string, boolean>;
 
+export type JobDayShiftOverride = {
+    title?: string;
+    hours?: number;
+    working?: boolean;
+};
+
+export type JobDayShiftOverrides = Record<string, JobDayShiftOverride>;
+
+export type JobShiftPreset = {
+    title: string;
+    hours: number;
+};
+
 export type JobCalendarState = {
     visibleMonthIso: string;
     selectedDayIso: string | null;
@@ -60,7 +73,9 @@ export type JobCalendarState = {
     monthlySalarySek: number;
     monthlyBonusSek: number;
     bonusMonthOverrides: Record<string, boolean>;
+    dayShiftOverrides: JobDayShiftOverrides;
     workingDayOverrides: JobWorkingDayOverrides;
+    shiftPreset: JobShiftPreset | null;
 };
 
 export type Contact = {

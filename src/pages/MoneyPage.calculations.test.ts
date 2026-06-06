@@ -22,63 +22,78 @@ describe('MoneyPage calculation logic', () => {
     test('Misato income is stored and read per month', () => {
         const aprilIso = '2028-04-01';
         const mayIso = '2028-05-01';
+        const incomeA = Math.floor(Math.random() * 5000);
+        const incomeB = Math.floor(Math.random() * 5000);
 
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
-            monthlyIncomeSek: 1000,
+            monthlyIncomeSek: incomeA,
             monthlyIncomeByMonthSek: {
-                [aprilIso]: 2500,
+                [aprilIso]: incomeB,
             },
         });
 
-        expect(getModeMonthlyIncomeSek(state, aprilIso, 'Misato')).toBe(2500);
-        expect(getModeMonthlyIncomeSek(state, mayIso, 'Misato')).toBe(1000);
+        expect(getModeMonthlyIncomeSek(state, aprilIso, 'Misato')).toBe(incomeB);
+        expect(getModeMonthlyIncomeSek(state, mayIso, 'Misato')).toBe(incomeA);
     });
 
     test('Both mode monthly income combines Albin and Misato income', () => {
         const monthIso = '2028-04-01';
+        const incomeA = Math.floor(Math.random() * 2000);
+        const incomeB = Math.floor(Math.random() * 2000);
+        const incomeC = Math.floor(Math.random() * 2000);
+
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
-            monthlyIncomeSek: 1000,
+            monthlyIncomeSek: incomeA,
             monthlyAdditionalIncomeByMonthSek: {
-                [monthIso]: 1300,
+                [monthIso]: incomeB,
             },
             monthlyIncomeByMonthSek: {
-                [monthIso]: 900,
+                [monthIso]: incomeC,
             },
         });
 
-        expect(getModeMonthlyIncomeSek(state, monthIso, 'Both')).toBe(2200);
+        expect(getModeMonthlyIncomeSek(state, monthIso, 'Both')).toBe(incomeB + incomeC);
     });
 
     test('Both mode monthly expenses combine Albin and Misato expenses', () => {
         const monthIso = '2028-04-01';
+        const expensesA = Math.floor(Math.random() * 1000);
+        const expensesB = Math.floor(Math.random() * 1000);
+
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
-            monthlyExpensesSek: 700,
+            monthlyExpensesSek: expensesA,
             monthlyExpensesByMonthSek: {
-                [monthIso]: 1000,
+                [monthIso]: expensesB,
             },
         });
 
-        expect(getModeMonthlyExpensesSek(state, monthIso, 'Both')).toBe(1700);
+        expect(getModeMonthlyExpensesSek(state, monthIso, 'Both')).toBe(expensesA + expensesB);
     });
 
     test('Both mode cashflow uses combined income and expenses in chart math', () => {
         const monthDate = parseISO('2028-04-01');
         const monthIso = '2028-04-01';
+        const incomeA = Math.floor(Math.random() * 2000);
+        const expensesA = Math.floor(Math.random() * 1000);
+        const incomeB = Math.floor(Math.random() * 2000);
+        const incomeC = Math.floor(Math.random() * 2000);
+        const expensesB = Math.floor(Math.random() * 1000);
+
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
-            monthlyIncomeSek: 1000,
-            monthlyExpensesSek: 700,
+            monthlyIncomeSek: incomeA,
+            monthlyExpensesSek: expensesA,
             monthlyAdditionalIncomeByMonthSek: {
-                [monthIso]: 1300,
+                [monthIso]: incomeB,
             },
             monthlyIncomeByMonthSek: {
-                [monthIso]: 900,
+                [monthIso]: incomeC,
             },
             monthlyExpensesByMonthSek: {
-                [monthIso]: 1000,
+                [monthIso]: expensesB,
             },
             csnEnabled: false,
             seMunicipalTaxRatePct: 0,
@@ -101,28 +116,33 @@ describe('MoneyPage calculation logic', () => {
         const taxProfile = buildTaxProfile(state);
         const cashflow = calculateMonthCashflow(state, monthDate, 14.8, 'SEK', jobState, taxProfile, {}, 'Both');
 
-        expect(cashflow.incomeDisplay).toBe(2200);
-        expect(cashflow.expensesDisplay).toBe(1700);
+        expect(cashflow.incomeDisplay).toBe(incomeB + incomeC);
+        expect(cashflow.expensesDisplay).toBe(expensesA + expensesB);
         expect(cashflow.loanDisplay).toBe(0);
-        expect(cashflow.netDisplay).toBe(500);
+        expect(cashflow.netDisplay).toBe((incomeB + incomeC) - (expensesA + expensesB));
     });
 
     test('Both mode projection monthly delta equals Albin + Misato when tax and loan are neutral', () => {
         const startMonth = startOfMonth(new Date());
         const firstProjectedMonthIso = toMonthIso(addMonths(startMonth, 1));
+        const incomeA = Math.floor(Math.random() * 2000);
+        const expensesA = Math.floor(Math.random() * 1000);
+        const incomeB = Math.floor(Math.random() * 2000);
+        const incomeC = Math.floor(Math.random() * 2000);
+        const expensesB = Math.floor(Math.random() * 1000);
 
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
-            monthlyIncomeSek: 1000,
-            monthlyExpensesSek: 700,
+            monthlyIncomeSek: incomeA,
+            monthlyExpensesSek: expensesA,
             monthlyAdditionalIncomeByMonthSek: {
-                [firstProjectedMonthIso]: 1300,
+                [firstProjectedMonthIso]: incomeB,
             },
             monthlyIncomeByMonthSek: {
-                [firstProjectedMonthIso]: 900,
+                [firstProjectedMonthIso]: incomeC,
             },
             monthlyExpensesByMonthSek: {
-                [firstProjectedMonthIso]: 1000,
+                [firstProjectedMonthIso]: expensesB,
             },
             csnEnabled: false,
             seMunicipalTaxRatePct: 0,
@@ -158,14 +178,17 @@ describe('MoneyPage calculation logic', () => {
     test('Both mode tax equals Albin tax + Misato tax (separate taxation)', () => {
         const monthDate = parseISO('2028-04-01');
         const monthIso = '2028-04-01';
+        const incomeA = Math.floor(Math.random() * 50000);
+        const incomeB = Math.floor(Math.random() * 50000);
+
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
             monthlyIncomeSek: 0,
             monthlyAdditionalIncomeByMonthSek: {
-                [monthIso]: 30000,
+                [monthIso]: incomeA,
             },
             monthlyIncomeByMonthSek: {
-                [monthIso]: 30000,
+                [monthIso]: incomeB,
             },
             monthlyExpensesSek: 0,
             monthlyExpensesByMonthSek: {
@@ -191,14 +214,17 @@ describe('MoneyPage calculation logic', () => {
     test('Both mode tax is lower than combined-income tax in split-threshold scenario', () => {
         const monthDate = parseISO('2028-04-01');
         const monthIso = '2028-04-01';
+        const incomeA = Math.floor(Math.random() * 40000) + 20000;
+        const incomeB = Math.floor(Math.random() * 40000) + 20000;
+
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
             monthlyIncomeSek: 0,
             monthlyAdditionalIncomeByMonthSek: {
-                [monthIso]: 30000,
+                [monthIso]: incomeA,
             },
             monthlyIncomeByMonthSek: {
-                [monthIso]: 30000,
+                [monthIso]: incomeB,
             },
             monthlyExpensesSek: 0,
             monthlyExpensesByMonthSek: {
@@ -215,7 +241,7 @@ describe('MoneyPage calculation logic', () => {
         const taxProfile = buildTaxProfile(state);
 
         const both = calculateMonthCashflow(state, monthDate, 14.8, 'SEK', jobState, taxProfile, {}, 'Both');
-        const combinedSingleTax = calculateMonthlyTaxBreakdown(60000, 'SEK', taxProfile);
+        const combinedSingleTax = calculateMonthlyTaxBreakdown(incomeA + incomeB, 'SEK', taxProfile);
 
         expect(both.taxDisplay).toBeLessThan(combinedSingleTax.totalTax);
     });
@@ -223,19 +249,23 @@ describe('MoneyPage calculation logic', () => {
     test('Both mode projection delta equals Albin+Misato with realistic taxes', () => {
         const startMonth = startOfMonth(new Date());
         const firstProjectedMonthIso = toMonthIso(addMonths(startMonth, 1));
+        const incomeA = Math.floor(Math.random() * 30000) + 10000;
+        const incomeB = Math.floor(Math.random() * 30000) + 10000;
+        const expensesA = Math.floor(Math.random() * 10000) + 5000;
+        const expensesB = Math.floor(Math.random() * 10000) + 5000;
 
         const state = normalizeMoneyState({
             ...DEFAULT_MONEY_STATE,
             monthlyIncomeSek: 0,
             monthlyAdditionalIncomeByMonthSek: {
-                [firstProjectedMonthIso]: 26000,
+                [firstProjectedMonthIso]: incomeA,
             },
             monthlyIncomeByMonthSek: {
-                [firstProjectedMonthIso]: 19000,
+                [firstProjectedMonthIso]: incomeB,
             },
-            monthlyExpensesSek: 9000,
+            monthlyExpensesSek: expensesA,
             monthlyExpensesByMonthSek: {
-                [firstProjectedMonthIso]: 12000,
+                [firstProjectedMonthIso]: expensesB,
             },
             csnEnabled: false,
         });
@@ -259,18 +289,20 @@ describe('MoneyPage calculation logic', () => {
     });
 
     test('Japan national tax brackets return expected values at boundary points', () => {
-        expect(calculateJapanIncomeTax(1_950_000)).toBe(97_500);
-        expect(calculateJapanIncomeTax(3_300_000)).toBe(232_500);
-        expect(calculateJapanIncomeTax(6_950_000)).toBe(962_500);
+        expect(calculateJapanIncomeTax(1_950_000)).toBe(1_950_000 * 0.05);
+        expect(calculateJapanIncomeTax(3_300_000)).toBe(3_300_000 * 0.10 - 97_500);
+        expect(calculateJapanIncomeTax(6_950_000)).toBe(6_950_000 * 0.20 - 427_500);
     });
 
     test('Japan employment income deduction caps at 1,950,000 JPY', () => {
         expect(calculateJapanEmploymentIncomeDeduction(1_500_000)).toBe(550_000);
-        expect(calculateJapanEmploymentIncomeDeduction(9_000_000)).toBe(1_950_000);
+        expect(calculateJapanEmploymentIncomeDeduction(9_000_000 + Math.random() * 1000000)).toBe(1_950_000);
     });
 
     test('PMT with zero rate falls back to principal/periods', () => {
-        expect(getPmt(0, 300, 120000)).toBe(400);
+        const principal = Math.random() * 200000;
+        const periods = Math.floor(Math.random() * 300) + 1;
+        expect(getPmt(0, periods, principal)).toBe(principal / periods);
     });
 
     test('Month diff works across year boundary', () => {
@@ -280,8 +312,8 @@ describe('MoneyPage calculation logic', () => {
     });
 
     test('SEK/JPY conversion stays numerically consistent', () => {
-        const sek = 12345;
-        const rate = 14.8;
+        const sek = Math.random() * 50000;
+        const rate = Math.random() * 20 + 5;
         const jpy = fromSekAmount(sek, 'JPY', rate);
         const roundTripSek = toSekAmount(jpy, 'JPY', rate);
 

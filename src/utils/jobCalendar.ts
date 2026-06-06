@@ -19,11 +19,33 @@ export type HolidayInfo = {
     name: string;
     country: JobHolidayCountry;
 };
+import { JobDayShiftOverride } from './portalTypes';
 
 export type MonthWorkSummary = {
     workingDays: number;
     workingHours: number;
     expectedSalarySek: number;
+};
+
+export type DayShiftInfo = {
+    dateIso: string;
+    title: string;
+    hours: number;
+    working: boolean;
+    holidayInfo: HolidayInfo | null;
+};
+
+export type SevenDayWindowSummary = {
+    startDate: Date;
+    endDate: Date;
+    totalHours: number;
+    days: DayShiftInfo[];
+};
+
+export type MonthShiftCompliance = {
+    isLegal: boolean;
+    violatingWindows: SevenDayWindowSummary[];
+    allWindows: SevenDayWindowSummary[];
 };
 
 const toIsoDate = (date: Date): string => format(date, 'yyyy-MM-dd');
@@ -57,6 +79,90 @@ const getFirstSaturdayOnOrAfter = (year: number, monthIndex: number, dayOfMonth:
     const start = new Date(year, monthIndex, dayOfMonth);
     const offset = (6 - getDay(start) + 7) % 7;
     return addDays(start, offset);
+};
+
+const WORK_DATA_START_DATE = parseISO('2026-04-01');
+
+const getResolvedDayShiftOverride = (state: JobCalendarState, dateIso: string): JobDayShiftOverride | undefined => (
+    state.dayShiftOverrides[dateIso]
+    ?? (state.workingDayOverrides[dateIso] !== undefined
+        ? { working: state.workingDayOverrides[dateIso], hours: state.workingDayOverrides[dateIso] ? state.workingHoursPerDay : 0 }
+        : undefined)
+);
+
+export const getDayShiftInfoForDate = (date: Date, state: JobCalendarState): DayShiftInfo => {
+    const dateIso = toIsoDate(date);
+    const holidayInfo = getHolidayInfoForDate(date, state.holidayCountry);
+
+    if (date < WORK_DATA_START_DATE) {
+        return {
+            dateIso,
+            title: '',
+            hours: 0,
+            working: false,
+            holidayInfo,
+        };
+    }
+
+    const defaultWorking = !isWeekend(date) && !holidayInfo;
+    const override = getResolvedDayShiftOverride(state, dateIso);
+    const working = override?.working ?? defaultWorking;
+    const resolvedHours = Math.max(override?.hours ?? state.workingHoursPerDay, 0);
+
+    return {
+        dateIso,
+        title: override?.title ?? '',
+        hours: working ? resolvedHours : 0,
+        working,
+        holidayInfo,
+    };
+};
+
+export const getWorkingHoursForDate = (date: Date, state: JobCalendarState): number => getDayShiftInfoForDate(date, state).hours;
+
+export const getSevenDayWindowSummary = (startDate: Date, state: JobCalendarState): SevenDayWindowSummary => {
+    const endDate = addDays(startDate, 6);
+    const days = eachDayOfInterval({ start: startDate, end: endDate }).map((day) => getDayShiftInfoForDate(day, state));
+
+    return {
+        startDate,
+        endDate,
+        totalHours: days.reduce((sum, day) => sum + day.hours, 0),
+        days,
+    };
+};
+
+export const getClampedSevenDayWindowStartIndex = (startIndex: number, daysLength: number): number => {
+    const maximumIndex = Math.max(daysLength - 1, 0);
+    return Math.min(Math.max(startIndex, 0), maximumIndex);
+};
+
+export const getMonthShiftCompliance = (monthDate: Date, state: JobCalendarState): MonthShiftCompliance => {
+    const monthStart = startOfMonth(monthDate);
+    const monthEnd = endOfMonth(monthDate);
+
+    if (monthEnd < WORK_DATA_START_DATE) {
+        return {
+            isLegal: true,
+            violatingWindows: [],
+            allWindows: [],
+        };
+    }
+
+    const windowStart = addDays(monthStart, -6);
+    const windowStarts = eachDayOfInterval({ start: windowStart, end: monthEnd });
+
+    const allWindows = windowStarts
+        .map((startDate) => getSevenDayWindowSummary(startDate, state))
+        .filter((window) => window.endDate >= monthStart && window.startDate <= monthEnd);
+
+    const violatingWindows = allWindows.filter((window) => window.totalHours > 28);
+
+    return {
+        isLegal: violatingWindows.length === 0,
+        violatingWindows,
+        allWindows,
+    };
 };
 
 export const getJapanEquinoxDay = (year: number, type: 'spring' | 'autumn'): number => {
@@ -183,22 +289,13 @@ export const getMonthGridDays = (monthDate: Date): Date[] => {
 };
 
 export const isWorkingDay = (date: Date, state: JobCalendarState): boolean => {
-    const isoDate = toIsoDate(date);
-    const override = state.workingDayOverrides[isoDate];
-
-    if (override !== undefined) {
-        return override;
-    }
-
-    const holidayInfo = getHolidayInfoForDate(date, state.holidayCountry);
-
-    return !isWeekend(date) && !holidayInfo;
+    return getDayShiftInfoForDate(date, state).working;
 };
 
 export const getMonthWorkSummary = (monthDate: Date, state: JobCalendarState): MonthWorkSummary => {
     const days = getMonthGridDays(monthDate).filter((day) => isSameDay(day, monthDate) || day.getMonth() === monthDate.getMonth());
     const workingDays = days.filter((day) => isWorkingDay(day, state)).length;
-    const workingHours = workingDays * state.workingHoursPerDay;
+    const workingHours = days.reduce((sum, day) => sum + getWorkingHoursForDate(day, state), 0);
     const expectedSalarySek = workingHours * state.wagePerHourSek;
 
     return {

@@ -12,4 +12,5 @@ export const PORTAL_TABS: PortalTabConfig[] = [
     { key: 'Contacts', label: 'Contacts', description: 'Friends and map view' },
     { key: 'Todo', label: 'Todo', description: 'Tasks and workflow' },
     { key: 'Timeline', label: 'Timeline', description: 'Events and milestones' },
+    { key: 'Travel', label: 'Travel', description: 'Plans and map routes' },
 ];

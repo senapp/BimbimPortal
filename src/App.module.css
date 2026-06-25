@@ -7,17 +7,20 @@
 
 .container {
     width: 100%;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
-    align-items: flex-start;
     flex-direction: column;
-    gap: 20px;
-    padding: 28px;
+    padding: 20px;
     background: linear-gradient(180deg, rgb(249 251 255) 0%, rgb(238 243 255) 100%);
 }
 
 .content {
     width: 100%;
+    flex: 1;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+}
+
+.containerFullscreen {
+    padding: 0 !important;
 }

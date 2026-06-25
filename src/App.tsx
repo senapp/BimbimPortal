@@ -4,6 +4,7 @@ import { JobPage } from './pages/JobPage';
 import { MoneyPage } from './pages/MoneyPage';
 import { TodoPage } from './pages/TodoPage';
 import { TimelinePage } from './pages/TimelinePage';
+import { TravelPage } from './pages/TravelPage';
 import { Header } from './components/Header';
 import { PORTAL_TABS } from './utils/portalTabs';
 import { PortalTabKey } from './utils/portalTypes';
@@ -20,12 +21,25 @@ const PERSISTED_STORAGE_KEYS = [
     'contacts-state',
     'todo-state',
     'timeline-state',
+    'travel-state',
     'global-jpy-per-sek-rate',
 ] as const;
 
 export const App: React.FC = () => {
     const tabs = PORTAL_TABS;
     const [activeTab, setActiveTab] = usePersistedState<PortalTabKey>('portal-active-tab', 'Money');
+
+    const [travelFullscreen, setTravelFullscreen] = React.useState(true);
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const hasSharePlan = window.location.hash.includes('sharePlan=') || window.location.search.includes('sharePlan=')
+                || window.location.hash.includes('planId=') || window.location.search.includes('planId=');
+            if (hasSharePlan && activeTab !== 'Travel') {
+                setActiveTab('Travel');
+            }
+        }
+    }, [activeTab, setActiveTab]);
 
     const onExportData = (): void => {
         const payload = {
@@ -103,15 +117,27 @@ export const App: React.FC = () => {
                 return <TodoPage />;
             case 'Timeline':
                 return <TimelinePage />;
+            case 'Travel':
+                return <TravelPage isFullscreen={travelFullscreen} onToggleFullscreen={() => setTravelFullscreen(prev => !prev)} />;
             case 'Money':
             default:
                 return <MoneyPage />;
         }
     };
 
+    const showHeader = activeTab !== 'Travel' || !travelFullscreen;
+
     return (
-        <div className={css.container}>
-            <Header tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onExportData={onExportData} onImportData={onImportData} />
+        <div className={`${css.container} ${activeTab === 'Travel' && travelFullscreen ? css.containerFullscreen : ''}`}>
+            {showHeader && (
+                <Header
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    onExportData={onExportData}
+                    onImportData={onImportData}
+                />
+            )}
             <main className={css.content}>{renderScreen()}</main>
         </div>
     );

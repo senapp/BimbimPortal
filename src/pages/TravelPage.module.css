@@ -1,0 +1,997 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background-color: #111827;
+    color: #f3f4f6;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.topBar {
+    min-height: 180px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 1rem;
+    background-color: #1f2937;
+    border-bottom: 1px solid #374151;
+}
+
+.detailPanel {
+    flex: 0 0 70px;
+    background-color: #111827;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid #374151;
+    overflow: hidden;
+}
+
+.detailInfo {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.detailTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.detailDescription {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.detailTravel {
+    flex: 0 0 240px;
+    background-color: #1f2937;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #374151;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.detailTravelLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.detailTravelValue {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6366f1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapPane {
+    flex: 1;
+    position: relative;
+}
+
+.topBarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.eventListWrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
+}
+
+.eventListWrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.eventListWrapper::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+.eventListWrapper::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+    border-radius: 10px;
+}
+
+.eventCard {
+    flex: 0 0 160px;
+    height: 80px;
+    background-color: #374151;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    border: 2px solid transparent;
+}
+
+.eventCard:hover {
+    transform: translateY(-2px);
+    border-color: #4b5563;
+}
+
+.eventCardSelected {
+    border-color: #6366f1;
+    background-color: #4b5563;
+}
+
+.eventDate {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 0.15rem;
+}
+
+.eventTitle {
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.eventDescription {
+    font-size: 0.75rem;
+    color: #d1d5db;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.transportBadge {
+    margin-top: auto;
+    font-size: 0.65rem;
+    background-color: #4b5563;
+    padding: 0.05rem 0.3rem;
+    border-radius: 0.2rem;
+    align-self: flex-start;
+}
+
+.mapWrap {
+    height: 100%;
+    width: 100%;
+}
+
+.map {
+    height: 100%;
+    width: 100%;
+}
+
+.primaryButton {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+    background-color: #4f46e5;
+}
+
+.secondaryButton {
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.secondaryButton:hover {
+    background-color: #4b5563;
+}
+
+.secondaryButtonDanger {
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.secondaryButtonDanger:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Modal Styles */
+.modalBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modalCard {
+    background-color: #1f2937;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    border: 1px solid #374151;
+    overflow: auto;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalClose {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.inputGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.field span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.field input, .field select, .field textarea {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.9rem;
+}
+
+.fullWidth {
+    grid-column: span 2;
+}
+
+.mapPickerBlock {
+    margin-top: 0.5rem;
+}
+
+.mapPickerHeader {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.mapPickerHint {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.mapPickerWrap {
+    height: 300px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #4b5563;
+}
+
+.mapPickerMap {
+    height: 100%;
+    width: 100%;
+}
+
+.actionsRow {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Map Marker Styles */
+.mapMarker {
+    width: 44px;
+    height: 44px;
+    background-color: #6366f1;
+    border: 3px solid white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    overflow: visible; /* Changed to visible for the title */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.mapMarkerTransition {
+    background-color: #4b5563 !important;
+    border-color: #9ca3af !important;
+    opacity: 0.75;
+}
+
+.mapMarkerTransition .markerTime {
+    color: #9ca3af !important;
+}
+
+.markerTitle {
+    position: absolute;
+    top: -42px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(17, 24, 39, 0.95);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.markerTime {
+    font-size: 0.65rem;
+    color: #6366f1;
+    font-weight: 700;
+}
+
+.markerEventName {
+    font-weight: 600;
+}
+
+.mapMarkerSelected .markerTitle {
+    background-color: #f59e0b;
+    border-color: rgba(255,255,255,0.4);
+}
+
+.mapMarkerSelected .markerTime {
+    color: #fff;
+}
+
+.markerLabel {
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    border-radius: 9px;
+}
+
+.animatedTransportIcon {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    text-shadow: 0 0 4px rgba(0,0,0,0.5);
+    z-index: 2000;
+}
+
+.rotationWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s linear;
+    will-change: transform;
+}
+
+/* Event Detail Popup on Map */
+.eventPopup :global(.leaflet-popup-content-wrapper) {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    border-radius: 0.75rem;
+    padding: 0;
+    overflow: hidden;
+}
+
+.eventPopup :global(.leaflet-popup-content) {
+    margin: 0;
+    width: 280px !important;
+}
+
+.popupImage {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    background-color: #374151;
+}
+
+.popupContent {
+    padding: 1rem;
+}
+
+.popupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.popupTitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0;
+    color: #fff;
+}
+
+.popupDate {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 0.75rem;
+}
+
+.popupDescription {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.popupMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #111827;
+    border-radius: 0.5rem;
+}
+
+.popupMetaRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+}
+
+.popupMetaLabel {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.popupMetaValue {
+    color: #6366f1;
+    font-weight: 700;
+}
+
+/* Plan selector */
+.planHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #9ca3af;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggleLabel input {
+    cursor: pointer;
+}
+
+.planSelect {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    color: white;
+    padding: 0.4rem;
+    border-radius: 0.375rem;
+    min-width: 150px;
+}
+
+.mapMarkerWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pickerMarkerWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pickerMarkerPin {
+    width: 26px;
+    height: 34px;
+    background-color: #ef4444;
+    border-radius: 13px 13px 13px 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.pickerMarkerDot {
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.dayCard {
+    flex: 0 0 250px;
+    min-height: 110px;
+    height: auto;
+    background-color: #374151;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    border: 2px solid transparent;
+}
+
+.dayCard:hover {
+    transform: translateY(-2px);
+    border-color: #4b5563;
+}
+
+.dayCardSelected {
+    border-color: #6366f1;
+    background-color: #4b5563;
+}
+
+.dayCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.accommodationHeaderRow {
+    display: flex;
+    align-items: center;
+    background-color: rgba(16, 185, 129, 0.1);
+    padding: 0.1rem 0.2rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.accommodationPriceBox {
+    color: #fbbf24;
+    background-color: rgba(251, 191, 36, 0.12);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(251, 191, 36, 0.18);
+    font-family: monospace;
+}
+
+.dayDateText {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.dayEventsCount {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    background-color: #1f2937;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+}
+
+.dayEventsList {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    scrollbar-width: none;
+}
+
+.dayEventsList::-webkit-scrollbar {
+    display: none;
+}
+
+.dayEventItem {
+    font-size: 0.75rem;
+    color: #d1d5db;
+    padding: 0.15rem 0.3rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.dayEventItem:hover {
+    background-color: #1f2937;
+    color: #fff;
+}
+
+.dayEventItemSelected {
+    background-color: #6366f1;
+    color: #fff;
+    font-weight: 600;
+}
+
+.dayEventItemSelected:hover {
+    background-color: #4f46e5;
+}
+
+.dayEventItemPreviousLast {
+    color: #9ca3af;
+    font-style: italic;
+    opacity: 0.5;
+}
+
+.dayEventItemPreviousLast:hover {
+    background-color: #374151;
+    color: #fff;
+    opacity: 0.8;
+}
+
+.dayEventItemPreviousLastSelected {
+    background-color: #4b5563;
+    color: #fff;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.dayEventItemPreviousLastSelected:hover {
+    background-color: #374151;
+}
+
+.eventIndex {
+    color: #9ca3af;
+    font-weight: 700;
+}
+
+.dayEventItemSelected .eventIndex {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.eventItemTitle {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.planDates {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-left: 0.25rem;
+}
+
+.dayAccommodation {
+    font-size: 0.7rem;
+    color: #10b981;
+    font-weight: 600;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    flex-direction: column;
+}
+
+.dayAccommodation:hover {
+    background-color: rgba(166, 166, 166, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.dayAccommodationSelected {
+    background-color: #2c4958;
+    border-color: #10b981;
+}
+
+.dayAccommodationSelected:hover {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.sharedBanner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #312e81;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #4338ca;
+}
+
+.fullscreenButton {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    margin-right: 0.5rem;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.fullscreenButton:hover {
+    color: #fff;
+    background-color: #374151;
+}
+
+.pageFullscreen {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.accommodationIconThumbnail {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.eventIconThumbnail {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.eventIconFallback {
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.dayCardFooter {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 0.35rem;
+    margin-top: 0.35rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.dayCardFooterLabel {
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+}
+
+.dayCardFooterValue {
+    color: #fbbf24;
+    background-color: rgba(251, 191, 36, 0.12);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(251, 191, 36, 0.18);
+    font-family: monospace;
+}
+
+.eventItemCost {
+    color: #fbbf24;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.detailCost {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fbbf24;
+    background-color: rgba(251, 191, 36, 0.15);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    margin-left: auto;
+}
+.eventListLinkIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+    margin-left: 0.25rem;
+    padding: 0.1rem;
+    border-radius: 0.25rem;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.eventListLinkIcon:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.detailLinkIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    background-color: rgba(99, 102, 241, 0.15);
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+    cursor: pointer;
+}
+
+.detailLinkIcon:hover {
+    color: #818cf8;
+    background-color: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.popupLinkIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    padding: 0.2rem;
+    border-radius: 0.25rem;
+    transition: color 0.15s, background-color 0.15s;
+    margin-left: 0.5rem;
+}
+
+.popupLinkIcon:hover {
+    color: #6366f1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    padding: 0;
+}
+
+.iconButton:hover {
+    background-color: #4b5563;
+    color: #fff;
+    border-color: #6b7280;
+}
+
+.iconButtonDanger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    padding: 0;
+}
+
+.iconButtonDanger:hover {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+.planTotalSummary {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dayDateContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+}
+
+.dayWeekdayText {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #9ca3af;
+    line-height: 1.1;
+}
+
+.planDateRangeRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-bottom: 0.4rem;
+    padding: 0 0.5rem;
+    width: 100%;
+}

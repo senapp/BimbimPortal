@@ -1,6 +1,26 @@
 import http from 'node:http';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+const parseRequestBody = (req) => {
+    return new Promise((resolve, reject) => {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                resolve(JSON.parse(body || '{}'));
+            } catch (err) {
+                reject(err);
+            }
+        });
+        req.on('error', err => {
+            reject(err);
+        });
+    });
+};
 
 const PORT = 8787;
 const INSTAGRAM_WEB_APP_ID = '936619743392459';
@@ -25,13 +45,45 @@ const sendJson = (res, statusCode, payload) => {
 
 export const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
     if (req.method === 'OPTIONS') {
         res.statusCode = 204;
         res.end();
+        return;
+    }
+
+    if (req.method === 'POST' && req.url === '/api/incorporate-plan') {
+        try {
+            const plan = await parseRequestBody(req);
+            if (!plan || !plan.id || !plan.name) {
+                sendJson(res, 400, { error: 'Invalid plan payload' });
+                return;
+            }
+
+            const __dirname = path.dirname(fileURLToPath(import.meta.url));
+            const rootDir = path.resolve(__dirname, '..');
+            
+            const srcPlansDir = path.join(rootDir, 'src', 'plans');
+            const distPlansDir = path.join(rootDir, 'dist', 'plans');
+
+            // Ensure directories exist
+            fs.mkdirSync(srcPlansDir, { recursive: true });
+            fs.mkdirSync(distPlansDir, { recursive: true });
+
+            const jsonStr = JSON.stringify(plan, null, 2);
+
+            // Write to src/plans/ and dist/plans/
+            fs.writeFileSync(path.join(srcPlansDir, `${plan.id}.json`), jsonStr, 'utf8');
+            fs.writeFileSync(path.join(distPlansDir, `${plan.id}.json`), jsonStr, 'utf8');
+
+            sendJson(res, 200, { success: true, id: plan.id });
+        } catch (error) {
+            console.error('Incorporate plan failed:', error);
+            sendJson(res, 500, { error: 'Failed to save incorporated plan: ' + error.message });
+        }
         return;
     }
 

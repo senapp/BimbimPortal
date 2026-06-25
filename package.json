@@ -4,9 +4,9 @@
     "description": "",
     "main": "main.js",
     "scripts": {
-        "watch": "npx webpack --mode=\"development\" --watch",
-        "build": "npx webpack --mode=\"production\"",
-        "build-dev": "npx webpack --mode=\"development\"",
+        "watch": "node scripts/copy-plans.mjs && npx webpack --mode=\"development\" --watch",
+        "build": "node scripts/copy-plans.mjs && npx webpack --mode=\"production\"",
+        "build-dev": "node scripts/copy-plans.mjs && npx webpack --mode=\"development\"",
         "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
         "instagram-proxy": "node scripts/instagram-photo-proxy.mjs",
         "eslint": "eslint \"src/**/*.{ts,tsx}",

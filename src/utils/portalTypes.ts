@@ -1,4 +1,4 @@
-export type PortalTabKey = 'Money' | 'Job' | 'Contacts' | 'Todo' | 'Timeline';
+export type PortalTabKey = 'Money' | 'Job' | 'Contacts' | 'Todo' | 'Timeline' | 'Travel';
 
 export type CurrencyCode = 'SEK' | 'JPY';
 
@@ -160,4 +160,42 @@ export type Timeline = {
 export type TimelinePageState = {
     timelines: Timeline[];
     selectedTimelineId: string | null;
+};
+
+export type TravelTransportMethod = 'plane' | 'car' | 'bus' | 'train' | 'walk';
+
+export type TravelEvent = {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    time?: string;
+    endTime?: string;
+    latitude: number;
+    longitude: number;
+    imageUrl?: string;
+    transportMethod?: TravelTransportMethod;
+    isAccommodation?: boolean;
+    cost?: number;
+    costCurrency?: CurrencyCode;
+    link?: string;
+    costType?: 'per-person' | 'constant';
+};
+
+export type TravelPlan = {
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    events: TravelEvent[];
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type TravelPageState = {
+    plans: TravelPlan[];
+    selectedPlanId: string | null;
+    simpleRoutes?: boolean;
+    displayCurrency?: CurrencyCode;
+    groupSize?: number;
 };

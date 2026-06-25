@@ -33,7 +33,7 @@ export const Header: React.FC<Props> = ({ tabs, activeTab, onTabChange, onExport
         <header className={css.header}>
             <div className={css.topRow}>
                 <div className={css.brandBlock}>
-                    <h1 className={css.title}>Bimbim Portal</h1>
+                    <h1 className={css.title}>Mingo Portal</h1>
                     <p className={css.subtitle}>Navigate between the workspaces and keep state persisted</p>
                 </div>
 

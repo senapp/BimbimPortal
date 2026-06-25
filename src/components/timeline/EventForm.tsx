@@ -12,6 +12,8 @@ interface EventFormState {
     date?: string;
     startDate?: string;
     endDate?: string;
+    startTime?: string;
+    endTime?: string;
 }
 
 interface EventFormProps {
@@ -133,8 +135,8 @@ export const EventForm: React.FC<EventFormProps> = ({
                         />
                     </div>
                 ) : (
-                    <>
-                        <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ flex: 1 }}>
                             <label
                                 style={{
                                     display: 'block',
@@ -156,7 +158,7 @@ export const EventForm: React.FC<EventFormProps> = ({
                                 }
                             />
                         </div>
-                        <div style={{ marginBottom: '16px' }}>
+                        <div style={{ flex: 1 }}>
                             <label
                                 style={{
                                     display: 'block',
@@ -175,8 +177,38 @@ export const EventForm: React.FC<EventFormProps> = ({
                                 }
                             />
                         </div>
-                    </>
+                    </div>
                 )}
+
+                {/* Time Fields */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>
+                            Start Time (optional)
+                        </label>
+                        <input
+                            type="time"
+                            className={css.input}
+                            value={formState.startTime || ''}
+                            onChange={(e) =>
+                                setFormState({ ...formState, startTime: e.target.value })
+                            }
+                        />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>
+                            End Time (optional)
+                        </label>
+                        <input
+                            type="time"
+                            className={css.input}
+                            value={formState.endTime || ''}
+                            onChange={(e) =>
+                                setFormState({ ...formState, endTime: e.target.value })
+                            }
+                        />
+                    </div>
+                </div>
 
                 {/* Category */}
                 <div style={{ marginBottom: '16px' }}>
